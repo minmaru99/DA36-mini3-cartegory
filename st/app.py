@@ -11,9 +11,12 @@ import time
 
 if 'page' not in st.session_state:
     st.session_state['page'] = 1
+
+
 # 페이지 변경 함수
 def go_to_page(page_num):
     st.session_state['page'] = page_num
+
 
 if st.session_state['page'] == 1:
 
@@ -64,13 +67,19 @@ if st.session_state['page'] == 1:
 
     st.markdown(f"<div class='big-subtitle'>{subtitle}</div>", unsafe_allow_html=True)
 
-
     st.markdown('-' * 10)
     col1, col2, col3 = st.columns([2, 2, 2])
     with col3:
         # 버튼 출력
-        if st.button("LeT's gO"):
-            go_to_page(2)
+        if st.button("LeT's gO 🏃🏻‍♂️🏃🏻‍♂️"):
+            # 로딩 진행 표시
+            progress_bar = st.progress(0)  # 진행 상태를 나타낼 막대 생성
+            for percent_complete in range(100):
+                time.sleep(0.01)  # 진행 상태를 갱신하기 위해 잠시 대기
+                progress_bar.progress(percent_complete + 1)  # 진행 상태 갱신
+            # 페이지 전환
+            st.session_state['page'] = 2
+            st.rerun()  # 페이지 리프레시
 
 
 elif st.session_state['page'] == 2:
@@ -102,7 +111,7 @@ elif st.session_state['page'] == 2:
 
     st.markdown('<br>' * 7, unsafe_allow_html=True)
     st.title('Please register your vehicle 👀')
-    st.write('-'*10)
+    st.write('-' * 10)
     st.subheader('Upload here⬇️')
 
 
@@ -121,48 +130,26 @@ elif st.session_state['page'] == 2:
                      'Seltos', 'Sorento', 'Soul', 'Sportage', 'Tucson', 'Veracruz']
 
     # 현대차, 기아차 모델 리스트
-    electric_vehicles = ['Kona', 'Niro', 'Model', 'Santefe', 'Palisade']
+    electric_vehicles = ['Kona', 'Niro', 'Model', 'Santefe', 'Palisade', 'Soul']
     hyundai_models = ['Palisade', 'Tucson', 'Santafe', 'Veracruz', 'Kona', 'Niro']
     kia_models = ['Carens', 'Mohave', 'Seltos', 'Sorento', 'Soul', 'Sportage']
 
     # 이미지 업로드
     uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"])
+    # col1, col2, col3 = st.columns([1, 2, 1])
+    # with col2:
+    #     with st.container()
     with st.container():
-        col1, col2 = st.columns([2, 2.5])  # 두 개의 열로 나누기
+        col1, col2 = st.columns([1, 1])  # 두 개의 열로 나누기
         with col1:
-            # st.subheader('Upload here⬇️')
-            # # 모델 로드
-            # @st.cache_resource  # 캐싱을 통해 모델 로드 속도 향상
-            # def load_trained_model(model_path):
-            #     return load_model(model_path)
-            #
-            # # model_path = "mb_model.h5"
-            # model_path = "Xception_model.h5"
-            # model = load_trained_model(model_path)
-            #
-            # # 차량 모델 리스트
-            # label_classes = ['Carens', 'Kona', 'Mohave', 'Niro', 'Palisade', 'Santafe',
-            #                  'Seltos', 'Sorento', 'Soul', 'Sportage', 'Tucson', 'Veracruz']
-            #
-            # # 현대차, 기아차 모델 리스트
-            # electric_vehicles = ['Kona', 'Niro', 'Model', 'Santefe', 'Palisade']
-            # hyundai_models = ['Palisade', 'Tucson', 'Santafe', 'Veracruz', 'Kona', 'Niro']
-            # kia_models = ['Carens', 'Mohave', 'Seltos', 'Sorento', 'Soul', 'Sportage']
-            #
-            # # 이미지 업로드
-            # uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"])
-
             if uploaded_file is not None:
                 # 업로드된 이미지 표시
-                st.image(uploaded_file, caption="Car Image", use_column_width=True)
+                st.image(uploaded_file, caption="", use_column_width=True)
 
         with col2:
             if uploaded_file is None:
-                st.write(' ')
+                st.markdown('')
             if uploaded_file is not None:
-                # 업로드된 이미지 표시
-                # st.image(uploaded_file, caption="Car Image", use_column_width=True)
-
                 # 이미지 전처리
                 IMAGE_SIZE = 299  # 모델 입력 크기
                 image = Image.open(uploaded_file).convert("RGB")  # 이미지를 RGB로 변환
@@ -176,34 +163,86 @@ elif st.session_state['page'] == 2:
                 pred_index = np.argmax(pred_proba)
                 pred_label = label_classes[pred_index]
                 confidence = pred_proba[0][pred_index]
-                # st.markdown('<br>' * 10, unsafe_allow_html=True)
-                # 예측 결과에 따른 출력
-                # if confidence < 10:
-                #     st.markdown('<br>'*6, unsafe_allow_html=True)
-                #     st.error ("Sorry, I couldn't recognize this car model.")
 
-                if pred_label in hyundai_models:
-                    st.success(f"🚗... Your car is **<Hyundai> - {pred_label}**")
-                    st.success(f"🤖... Accuracy is **{confidence * 100:.2f}%**")
-                elif pred_label in kia_models:
-                    st.success(f"🚗... Your car is **<Kia> - {pred_label}**")
-                    st.success(f"🤖... Accuracy is **{confidence * 100:.2f}%**")
+                st.session_state.pred_label = pred_label
+                st.session_state.confidence = confidence
 
-                # 전기차일 경우 안내 문구 출력
-                if pred_label in electric_vehicles:
-                    st.markdown(f"잠깐🤚🏻 {pred_label}는 전기차입니다! 지상 주차장을 이용해주세요.")
+                with st.expander("Image's info"):
+                    st.write(f"**파일명:** {uploaded_file.name}")
+                    st.write(f"**원본 크기:** {image.size}")
+                    st.write(f"**데이터 타입:** {type(image)}")
+                    # st.write(f"**형태:** {image.shape}")
+
+                if confidence > 0.5:
+                    if pred_label in hyundai_models:
+                        st.markdown(
+                            f"""
+                                <div style="background-color: #d4edda; padding: 10px; border-radius: 5px; font-size: 20px; color: #155724; margin-bottom: 10px;">
+                                    🏭... Manufacturer is <strong>Hyundai</strong>
+                                </div>
+                                <div style="background-color: #d4edda; padding: 10px; border-radius: 5px; font-size: 20px; color: #155724; margin-bottom: 10px;">
+                                    🚗... Your car is <strong>{pred_label}</strong>
+                                </div>
+                                <div style="background-color: #CEECF5; padding: 10px; border-radius: 5px; font-size: 20px; color: #08298A;">
+                                    🤖... Accuracy is <strong>{confidence * 100:.2f}%</strong>
+                                </div>
+                                """, unsafe_allow_html=True
+                        )
+                    elif pred_label in kia_models:
+                        st.markdown(
+                            f"""
+                                <div style="background-color: #d4edda; padding: 10px; border-radius: 5px; font-size: 20px; color: #155724; margin-bottom: 10px;">
+                                    🏭... Manufacturer is <strong>Kia</strong>
+                                </div>
+                                <div style="background-color: #d4edda; padding: 10px; border-radius: 5px; font-size: 20px; color: #155724; margin-bottom: 10px;">
+                                    🚗... Your car is <strong>{pred_label}</strong>
+                                </div>
+                                <div style="background-color: #CEECF5; padding: 10px; border-radius: 5px; font-size: 20px; color: #08298A;">
+                                    🤖... Accuracy is <strong>{confidence * 100:.2f}%</strong>
+                                </div>
+                                """, unsafe_allow_html=True
+                        )
+
+                    SAVE_DIR = "./uploaded_images"
+                    os.makedirs(SAVE_DIR, exist_ok=True)
+                    save_path = os.path.join(SAVE_DIR, uploaded_file.name)
+                    with open(save_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+
                 else:
-                    st.info(f"{pred_label}은 지하 주차장에 진입할 수 있습니다. 🥳")
+                    st.markdown('<br>' * 5, unsafe_allow_html=True)
+                    st.markdown(
+                        f"""
+                            <div style="background-color: #F6CECE; padding: 8px; border-radius: 5px; font-size: 20px; color: #DF0101; margin-bottom: 8px; width: 300px;">
+                                Sorry, I couldn't recognize this..
+                            </div>
+                            """, unsafe_allow_html=True
+                    )
 
-                # 서버에 이미지 저장
-                SAVE_DIR = "./uploaded_images"
-                os.makedirs(SAVE_DIR, exist_ok=True)
-                save_path = os.path.join(SAVE_DIR, uploaded_file.name)
-                with open(save_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                # st.info(f"The image is successfully saved: {save_path}")
+    if 'pred_label' in st.session_state and 'confidence' in st.session_state:
+        pred_label = st.session_state.pred_label
+        confidence = st.session_state.confidence
+
+        if uploaded_file is None:
+            st.markdown('')
+        else:
+            if confidence > 0.5:
+                if pred_label in electric_vehicles:
+                    # 전기차 안내 문구
+                    st.markdown(
+                        f"<h3 style='font-size: 25px; color: black;'>잠깐⚠️ {pred_label}는 전기차입니다. 지상 주차장을 이용해주세요.</h3>",
+                        unsafe_allow_html=True)
+                else:
+                    # 지하 주차장 안내 문구
+                    st.markdown(
+                        f"<h3 style='font-size: 25px; color: black;'>야호! {pred_label} 은 지하 주차장에 진입할 수 있습니다. 🥳</h3>",
+                        unsafe_allow_html=True)
+            else:
+                st.markdown(f"<h3 style='font-size: 25px; color: black;'>엥? 차 사진을 등록해주세요;</h3>",
+                            unsafe_allow_html=True)
 
     st.write('-' * 10)
+    # st.image('data/info.jpg')
     col1, col2, col3 = st.columns([2, 4, 2])  # 좌측, 중앙, 우측 열로 나누기
     with col1:
         if st.button("⬅️Back"):
@@ -237,10 +276,6 @@ elif st.session_state['page'] == 3:
             </style>
             """, unsafe_allow_html=True)
 
-    # 이미지 및 타이틀 설정
-    # st.image('data/evicon.png')
-    # st.title("More about EV!")
-    # st.write('-' * 20)
     st.title("EV charging stations near you!")
     st.markdown('<br>', unsafe_allow_html=True)
     image_url = "https://www.chargekorea.com/charge/index.php?"  # 원하는 링크
